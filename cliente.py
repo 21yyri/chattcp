@@ -16,13 +16,13 @@ def sendMessage():
         msg = f'{username}: {msg}'
         cliente.send(msg.encode())
 
-# def recvMessage():
-#     while True:
-#         server_msg = cliente.recv(1024).decode()
-#         print(server_msg)
+def recvMessage():
+    while True:
+        server_msg = cliente.recv(1024).decode()
+        print(server_msg)
 
-# threadRecv = Thread(target=recvMessage)
-# threadRecv.start()
+threadRecv = Thread(target=recvMessage)
+threadRecv.start()
 
 threadSend = Thread(target=sendMessage)
 threadSend.start()
