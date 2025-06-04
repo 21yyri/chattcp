@@ -2,9 +2,21 @@ import customtkinter as ctk
 from models.cliente import Client
 from threading import Thread
 
-
 cliente = Client()
-cliente.username = "Yuri"
+
+class App:
+    def __init__(self):
+        self.show_login()
+    
+    def show_login(self):
+        self.loginWindow = LoginWindow(self)
+        self.loginWindow.mainloop()
+
+    def show_chat(self, username):
+        self.loginWindow.destroy()
+        cliente.username = username
+        self.chatWindow = Chat()
+        self.chatWindow.mainloop()
 
 class Chat(ctk.CTk):
     def __init__(self):
@@ -12,6 +24,7 @@ class Chat(ctk.CTk):
         self.title(f"Chat - {cliente.username}")
         self.geometry("800x600")
         self.resizable(False, False)
+
         self.running = True
 
         self.protocol("WM_DELETE_WINDOW", self.fecharChat)
@@ -23,7 +36,7 @@ class Chat(ctk.CTk):
         self.msgBox.pack(side="left", fill='x', padx=10, pady=10)
         self.msgBox.bind("<Return>", lambda event : self.sendMsg())
 
-        self.enviar = ctk.CTkButton(self, text="Enviar", command=self.sendMsg)
+        self.enviar = ctk.CTkButton(self, text="Send", command=self.sendMsg)
         self.enviar.pack(side="right", padx=5)
 
         self.receberThread = Thread(target=self.recvMsg, daemon=True)
@@ -34,24 +47,19 @@ class Chat(ctk.CTk):
         if msg:
             cliente.sendMessage(msg)
             self.msgBox.delete(0, 'end')
-            self.atualizaChat(msg)
-
 
     def recvMsg(self):
-        while self.running:
+        while True:
             try:
-                msg = cliente.recvMessage()
-                if msg:
-                    self.atualizaChat(msg)
+                msg: str = cliente.recvMessage()
+
+                self.chatDisplay.configure(state="normal")
+                self.chatDisplay.insert("end", msg)
+                self.chatDisplay.see("end")
+                self.chatDisplay.configure(state="disabled")
             except Exception as E:
                 print(E)
                 break
-
-    def atualizaChat(self, msg):
-        self.chatDisplay.configure(state="normal")
-        self.chatDisplay.insert("end", f'{cliente.username}: {msg}' + '\n')
-        self.chatDisplay.see("end")
-        self.chatDisplay.configure(state="disabled")
 
     def fecharChat(self):
         self.running = False
@@ -59,8 +67,9 @@ class Chat(ctk.CTk):
 
 
 class LoginWindow(ctk.CTk):
-    def __init__(self):
+    def __init__(self, app):
         super().__init__()
+        self.appChat = app
         self.title("Login")
         self.geometry("400x150")
 
@@ -70,25 +79,16 @@ class LoginWindow(ctk.CTk):
         self.entryName = ctk.CTkEntry(self)
         self.entryName.pack(pady=5)
 
-        self.botaoLogin = ctk.CTkButton(self, text="Enviar", command=self.getName)
+        self.botaoLogin = ctk.CTkButton(self, text="Definir", command=self.getName)
         self.botaoLogin.pack()
 
     def fecharLogin(self):
-        self.deiconify()
         self.destroy()
 
-    def abrirChat(self):
-        self.withdraw()
-        chat = Chat()
-        chat.protocol("WM_DELETE_WINDOW", self.fecharLogin)
-        chat.deiconify()
-
     def getName(self):
-        username = self.entryName.get().strip()
-        if username:
-            cliente.username = username
-            self.abrirChat()
+        user_name = self.entryName.get().strip()
+        if user_name:
+            self.appChat.show_chat(username=user_name)
 
 
-login = LoginWindow()
-login.mainloop()
+App()

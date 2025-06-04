@@ -12,8 +12,5 @@ class Client:
         self.cliente.send(msg.encode())
 
     def recvMessage(self):
-        print("recebi msg")
-        while True:
-            mensagem = f"{self.cliente.recv(1024).decode()}\n"
-            return mensagem
-
+        return f"{self.cliente.recv(1024).decode()}\n"
+        
